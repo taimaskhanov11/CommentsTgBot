@@ -46,4 +46,4 @@ class Config(BaseModel):
     settings: Settings
 
 
-config = Config(**load_yaml("config_dev.yml"))
+config = Config(**load_yaml("config.yml"))
