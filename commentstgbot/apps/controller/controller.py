@@ -4,7 +4,7 @@ from typing import Optional
 
 from loguru import logger
 from pydantic import BaseModel
-from telethon import TelegramClient, events, utils,functions
+from telethon import TelegramClient, events, functions
 # client = TelegramClient(f'_session', api_id, api_hash)
 from telethon.tl import patched, types
 from telethon.tl.functions.channels import GetParticipantRequest
@@ -101,7 +101,7 @@ class Controller(BaseModel):
             # проверка доступа
             if not await self.checker.is_access(request, config.settings.check_type):
                 await message_controller(message,
-                                         f"@{user.username}, Нет доступа к каналу, добавьте пользователя в администраторы")
+                                         f"@{user.username}, Нет доступа к каналу, добавьте аккаунт в канал")
                 return
 
             # проверка на випа
@@ -149,7 +149,7 @@ class Controller(BaseModel):
         # print(channel)
         print(channel2)
         # functions.channels.
-        result:types.channels.ChannelParticipants = await self.client(functions.channels.GetParticipantsRequest(
+        result: types.channels.ChannelParticipants = await self.client(functions.channels.GetParticipantsRequest(
             channel=chat_id2,
             filter=types.ChannelParticipantsRecent(),
             offset=42,
