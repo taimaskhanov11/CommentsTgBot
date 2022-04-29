@@ -82,13 +82,13 @@ class Controller(BaseModel):
             # проверка на пересылку
             if not message.forwards:
                 await message_controller(message,
-                                         f"@{user.username}, Перешлите сообщение из канала если чат закрыт добавьте аккаунт в канал")
+                                         f"@{user.username}, Перешлите сообщение из канала если чат закрыт добавьте меня в канал")
                 return
 
             # проверка на канал
             if not await self.checker.is_channel(message):
                 await message_controller(message,
-                                         f"@{user.username}, Перешлите сообщение из канала если чат закрыт добавьте аккаунт в канал")
+                                         f"@{user.username}, Перешлите сообщение из канала если чат закрыт добавьте меня в канал")
                 return
 
             request = Request.parse(message)
@@ -102,7 +102,7 @@ class Controller(BaseModel):
             # проверка доступа
             if not await self.checker.is_access(request, config.settings.check_type):
                 await message_controller(message,
-                                         f"@{user.username}, Нет доступа к каналу, добавьте пользователя в администраторы")
+                                         f"@{user.username}, Нет доступа к каналу, добавьте меня в канал")
                 return
 
             # проверка на випа
