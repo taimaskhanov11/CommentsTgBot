@@ -2,12 +2,12 @@ import asyncio
 from pathlib import Path
 from typing import Optional
 
+import aiohttp
 from loguru import logger
 from pydantic import BaseModel
-from telethon import TelegramClient, events, functions
+from telethon import TelegramClient, events
 # client = TelegramClient(f'_session', api_id, api_hash)
 from telethon.tl import patched, types
-from telethon.tl.functions.channels import GetParticipantRequest
 
 from commentstgbot.apps.bot.utils.message_processes import message_controller, add_to_delete
 from commentstgbot.apps.controller.checker import Checker
@@ -45,6 +45,7 @@ class Controller(BaseModel):
     async def _init(self):
         logger.info("Запуск контроллера")
         path = str(Path(SESSION_PATH, f"{config.controller.api_id}.session"))
+        # self.client = TelegramClient(path, config.controller.api_id, config.controller.api_hash)
         self.client = TelegramClient(path, config.controller.api_id, config.controller.api_hash)
         self.checker = Checker(client=self.client)
         await self.client.start()
@@ -101,7 +102,7 @@ class Controller(BaseModel):
             # проверка доступа
             if not await self.checker.is_access(request, config.settings.check_type):
                 await message_controller(message,
-                                         f"@{user.username}, Нет доступа к каналу, добавьте аккаунт в канал")
+                                         f"@{user.username}, Нет доступа к каналу, добавьте пользователя в администраторы")
                 return
 
             # проверка на випа
@@ -126,45 +127,56 @@ class Controller(BaseModel):
                 logger.debug(f"Vip, пропуск проверки {checker_user_id}")
             temp.current_posts.append(request)
 
-        await self.client.run_until_disconnected()
+        while True:
+            await self.client.run_until_disconnected()
 
     async def dummy_start(self):
-        await self._init()
+        # await self._init()
+        path = str(Path(SESSION_PATH, f"{config.controller.api_id}.session"))
+        self.client = TelegramClient(path, config.controller.api_id, config.controller.api_hash)
+        await self.client.start()
+
+        # exit()
 
         @self.client.on(events.NewMessage(incoming=True))
         async def common_handler(event: events.NewMessage.Event):
             message: patched.Message = event.message
-            await self.client.forward_messages(269019356, message)
-            participant = await self.client(
-                GetParticipantRequest(channel=event.original_update.message.to_id.channel_id,
-                                      participant=event.original_update.message.from_id))
-            print(participant)
-            print(participant.participant)
+            print(message)
+            print(message.from_id.user_id)
+            print(message.from_id)
 
-        # chat_id = -1001750145969
-        group = 1750145969
-        chat_id2 = 1756454892
-        # channel: types.Channel = await self.client.get_entity(chat_id)
-        channel2: types.Channel = await self.client.get_entity(chat_id2)
-        # print(channel)
-        print(channel2)
-        # functions.channels.
-        result: types.channels.ChannelParticipants = await self.client(functions.channels.GetParticipantsRequest(
-            channel=chat_id2,
-            filter=types.ChannelParticipantsRecent(),
-            offset=42,
-            limit=20,
-            hash=0
-        ))
-        print(result)
-        print(result.users)
-        functions.channels.get
-        # group_name = "https://t.me/garitokenofficial"
-        # group: types.Chat = await self.client.get_entity(group_name)
-        # print(group)
-        # print(group)
-        # pprint(await self.client.)
-        # await self.client.run_until_disconnected()
+        lst = [
+            "https://sun7-8.userapi.com/impf/jcVohqBM7w21KRIJRxGiPAUVepdoJPTQkMENhQ/yDZs1REt-mQ.jpg?size=750x746&quality=95&sign=8bf6b9f499f1b4e3e83d6eea1186991e&c_uniq_tag=axlsc99uKkpOUAthcA3YlP5391MEsnoHK6ql5RY6n74&type=album",
+            # "https://sun7-9.userapi.com/impf/NlUvHWpjdV_atneeDnY0RW6RyAspNXa6IzFETw/_u0fZFTM-4U.jpg?size=750x1000&quality=95&sign=7bdcfa4b7e660ef7e601de149f0dd49b&c_uniq_tag=3evecVFqh_HLaQAOGSD_IiOX1VnQvlUC5A4UleKJA-c&type=album",
+            # "https://sun7-6.userapi.com/impf/cTGkU6Sr3LwjSWm2k9aZTcUF-8PRemr5X2lp0A/Jden1dv7Ho0.jpg?size=564x1002&quality=95&sign=89dd021bb5e106d0a30c9979af895fae&c_uniq_tag=UP8iXd3w4hjlhihAAyvIlr_ZHFZGbSR624AHmo_pXDk&type=album"
+        ]
+
+        print(await self.client.get_entity(5274127894))
+        # photos_bytes = []
+        # for i in lst:
+        #     photos_bytes.append(await download_photo(i))
+        # for i in :
+        #
+        # await self.client.send_file("@mumyau", ["music.mp3",photos_bytes[0]], caption="Бла бла")
+
+        # await self.client.send_file("@mumyau",photos_bytes[0], caption="Бла бла")
+        # user: User = await self.client.get_entity(1985947355)
+        # await self.client.send_file(1985947355,(photos=lst, users=[user]))
+        # await self.client.send_message(1985947355,"Бла бла", file=lst[0] )
+        # await self.client.send_message(1985947355,"Бла бла", file=lst[0] )
+        exit()
+
+
+headers = {
+    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)"
+                  " Chrome/99.0.4844.51 Safari/537.36"
+}
+
+
+async def download_photo(url):
+    async with aiohttp.ClientSession(headers=headers) as session:
+        async with session.get(url) as res:
+            return await res.read()
 
 
 if __name__ == "__main__":
