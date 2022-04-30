@@ -61,70 +61,76 @@ class Controller(BaseModel):
             message: patched.Message = event.message
             # logger.info(message)
             # logger.info(message.chat_id)
-
-            checker_user_id = message.from_id.user_id
-            user: types.User = await self.client.get_entity(checker_user_id)
-            if user.id == config.bot.id:
-                logger.info(f"Создано из бота {user}")
-                request = Request.parse(message)
-                temp.current_posts.append(request)
-                return
-
-                # print(message.id)
-            # await self.client.forward_messages(message.chat_id, message)
-            # await self.client.send_message(message.chat_id, "common_handler")
-            # logger.info(message.fwd_from.channel_post)
-            # проверка на админа
-            if checker_user_id in config.bot.admin:
-                logger.info(f"Админ {checker_user_id}|{message}")
-                return
-
-            # проверка на пересылку
-            if not message.forwards:
-                await message_controller(message,
-                                         f"@{user.username}, Перешлите сообщение из канала если чат закрыт добавьте меня в канал")
-                return
-
-            # проверка на канал
-            if not await self.checker.is_channel(message):
-                await message_controller(message,
-                                         f"@{user.username}, Перешлите сообщение из канала если чат закрыт добавьте меня в канал")
-                return
-
-            request = Request.parse(message)
-            # logger.info(request)
-            # проверка наличия
-            if request in temp.current_posts:
-                await message_controller(message,
-                                         f"@{user.username}, Такой пост уже есть в списке, подождите пока пройдет 5")
-                return
-
-            # проверка доступа
-            if not await self.checker.is_access(request, config.settings.check_type):
-                await message_controller(message,
-                                         f"@{user.username}, Нет доступа к каналу, добавьте меня в канал")
-                return
-
-            # проверка на випа
-            if checker_user_id not in config.bot.vip:
-                logger.debug(f"Проверка {checker_user_id}")
-
-                # проверка наличия комментария
-                unfinished_tasks: tuple[Response] = await self.check_request(checker_user_id)
-                if unfinished_tasks:
-                    await message_controller(message, f"@{user.username}, Оставьте комментарии под постами ниже ⬇")
-                    for r in unfinished_tasks:
-                        f = await self.client.forward_messages(message.chat_id, r.message_id, message.chat_id)
-                        add_to_delete(f)
-
-                    # f_messages = await self.client.forward_messages(message.chat_id,
-                    #                                                 [r.message_id for r in unfinished_tasks],
-                    #                                                 message.chat_id)
-
-                    # add_to_delete(f_messages)
+            try:
+                checker_user_id = message.from_id.user_id
+                user: types.User = await self.client.get_entity(checker_user_id)
+                if user.id == config.bot.id:
+                    logger.info(f"Создано из бота {user}")
+                    request = Request.parse(message)
+                    temp.current_posts.append(request)
                     return
-            else:
-                logger.debug(f"Vip, пропуск проверки {checker_user_id}")
+
+                    # print(message.id)
+                # await self.client.forward_messages(message.chat_id, message)
+                # await self.client.send_message(message.chat_id, "common_handler")
+                # logger.info(message.fwd_from.channel_post)
+                # проверка на админа
+                if checker_user_id in config.bot.admin:
+                    logger.info(f"Админ {checker_user_id}|{message}")
+                    return
+
+                # проверка на пересылку
+                if not message.forwards:
+                    await message_controller(message,
+                                             f"@{user.username}, Перешлите сообщение из канала если чат закрыт добавьте меня в канал")
+                    return
+
+                # проверка на канал
+                if not await self.checker.is_channel(message):
+                    await message_controller(message,
+                                             f"@{user.username}, Перешлите сообщение из канала если чат закрыт добавьте меня в канал")
+                    return
+
+                request = Request.parse(message)
+                # logger.info(request)
+                # проверка наличия
+                if request in temp.current_posts:
+                    await message_controller(message,
+                                             f"@{user.username}, Такой пост уже есть в списке, подождите пока пройдет 5")
+                    return
+
+                # проверка доступа
+                if not await self.checker.is_access(request, config.settings.check_type):
+                    await message_controller(message,
+                                             f"@{user.username}, Нет доступа к каналу, добавьте меня в канал")
+                    return
+
+                # проверка на випа
+                if checker_user_id not in config.bot.vip:
+                    logger.debug(f"Проверка {checker_user_id}")
+
+                    # проверка наличия комментария
+                    unfinished_tasks: tuple[Response] = await self.check_request(checker_user_id)
+                    if unfinished_tasks:
+                        await message_controller(message, f"@{user.username}, Оставьте комментарии под постами ниже ⬇")
+                        for r in unfinished_tasks:
+                            f = await self.client.forward_messages(message.chat_id, r.message_id, message.chat_id)
+                            add_to_delete(f)
+
+                        # f_messages = await self.client.forward_messages(message.chat_id,
+                        #                                                 [r.message_id for r in unfinished_tasks],
+                        #                                                 message.chat_id)
+
+                        # add_to_delete(f_messages)
+                        return
+                else:
+                    logger.debug(f"Vip, пропуск проверки {checker_user_id}")
+            except Exception as e:
+                logger.warning(e)
+                await message_controller(message,
+                                         f"Нет доступа к каналу, добавьте меня в канал и перешлите пост от своего лица")
+                return
+
             temp.current_posts.append(request)
 
         while True:
