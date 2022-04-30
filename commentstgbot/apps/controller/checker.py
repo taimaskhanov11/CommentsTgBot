@@ -52,9 +52,12 @@ class Checker(BaseModel):
                                                        limit=15):
             message: patched.Message = message
             if message.from_id:
-                if message.from_id.user_id == checker_user:
-                    logger.success(f"{checker_user} комментарий найден")
-                    return True
+                try:
+                    if message.from_id.user_id == checker_user:
+                        logger.success(f"{checker_user} комментарий найден")
+                        return True
+                except Exception as e:
+                    logger.warning(e)
         logger.warning(f"{checker_user} -> {request.channel_id}|{request.channel_post} комментарий не найден")
         return False
 
@@ -73,10 +76,9 @@ class Checker(BaseModel):
     async def subscribe_access(self, request: Request):
         try:
             pass
-        except telethon.errors.rpcerrorlist.ChatAdminRequiredError as  e:
+        except telethon.errors.rpcerrorlist.ChatAdminRequiredError as e:
             logger.warning(f"Не в списке админов|{request}|{e}")
             return False
-
 
     async def is_access(
             self, request: Request,
