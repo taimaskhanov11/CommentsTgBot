@@ -128,6 +128,7 @@ class Controller(BaseModel):
             except Exception as e:
                 await message_controller(message,
                                          f"Нет доступа к каналу, добавьте меня в канал и перешлите пост от своего лица")
+                logger.critical(e)
                 raise e
 
             temp.current_posts.append(request)
