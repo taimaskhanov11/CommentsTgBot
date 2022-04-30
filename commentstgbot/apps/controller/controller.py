@@ -59,7 +59,7 @@ class Controller(BaseModel):
         async def common_handler(event: events.NewMessage.Event):
             # async def common_handler(message: patched.Message):
             message: patched.Message = event.message
-            # logger.info(message)
+            logger.info(message)
             # logger.info(message.chat_id)
             try:
                 checker_user_id = message.from_id.user_id
@@ -126,10 +126,9 @@ class Controller(BaseModel):
                 else:
                     logger.debug(f"Vip, пропуск проверки {checker_user_id}")
             except Exception as e:
-                logger.warning(e)
                 await message_controller(message,
                                          f"Нет доступа к каналу, добавьте меня в канал и перешлите пост от своего лица")
-                return
+                raise e
 
             temp.current_posts.append(request)
 
